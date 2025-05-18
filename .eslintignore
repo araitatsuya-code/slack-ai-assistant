@@ -1,0 +1,9 @@
+dist/
+out/
+node_modules/
+coverage/
+resources/
+my-excluded-folder/
+
+# 特定のファイルパターンを除外
+**/*.test.js
