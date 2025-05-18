@@ -1,0 +1,33 @@
+appId: com.yourcompany.slack-ai-assistant
+productName: Slack AI Assistant
+copyright: Copyright © 2023 Your Company
+
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - from: '.'
+    filter:
+      - package.json
+      - out
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: resources/icon.icns
+
+dmg:
+  icon: resources/icon.icns
+  contents:
+    - type: link
+      path: /Applications
+      x: 410
+      y: 150
+    - type: file
+      x: 130
+      y: 150

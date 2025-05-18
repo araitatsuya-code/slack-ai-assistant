@@ -18,8 +18,12 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src"
+    ]
   },
-  "include": ["src", "electron"],
+  "include": ["src", "electron", "src/**/*.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
