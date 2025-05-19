@@ -1,7 +1,9 @@
+// App.tsx
 import { useState, useEffect } from "react";
 import { ThreadAnalyzer } from "./components/ThreadAnalyzer";
 import { Settings } from "./components/Settings";
 import { useAppStore } from "./store/appStore";
+import { Toaster } from "sonner";
 import "./App.css";
 
 type TabType = "thread" | "settings";
@@ -12,7 +14,6 @@ function App(): JSX.Element {
 
   // クリップボードからのスレッド監視
   useEffect(() => {
-    // window.api が存在するか確認
     if (window.api && window.api.onClipboardThread) {
       const cleanup = window.api.onClipboardThread((text) => {
         if (text) {
@@ -20,7 +21,6 @@ function App(): JSX.Element {
         }
       });
 
-      // クリーンアップ関数を返す
       return () => {
         if (cleanup && typeof cleanup === "function") {
           cleanup();
@@ -31,33 +31,50 @@ function App(): JSX.Element {
   }, [setThreadText]);
 
   return (
-    <div className="container">
-      <header>
-        <h1>Slack AI アシスタント</h1>
-        <nav>
-          <button
-            className={activeTab === "thread" ? "active" : ""}
-            onClick={() => setActiveTab("thread")}
-          >
-            スレッド解析
-          </button>
-          <button
-            className={activeTab === "settings" ? "active" : ""}
-            onClick={() => setActiveTab("settings")}
-          >
-            設定
-          </button>
-        </nav>
+    <div className="max-w-4xl mx-auto px-4 py-6 min-h-screen flex flex-col">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold">Slack AI アシスタント</h1>
+        <p className="text-sm text-gray-500">
+          テキスト推敲と返答作成をサポート
+        </p>
+
+        <div className="mt-4 border-b">
+          <nav className="flex -mb-px space-x-4">
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "thread"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("thread")}
+            >
+              スレッド取得
+            </button>
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "settings"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("settings")}
+            >
+              設定
+            </button>
+          </nav>
+        </div>
       </header>
 
-      <main>
+      <main className="flex-1">
         {activeTab === "thread" && <ThreadAnalyzer />}
         {activeTab === "settings" && <Settings />}
       </main>
 
-      <footer>
+      <footer className="mt-6 py-4 border-t text-sm text-gray-500 flex justify-between">
         <p>Slack AI アシスタント v0.1.0</p>
+        <p>© 2025</p>
       </footer>
+
+      <Toaster />
     </div>
   );
 }

@@ -1,6 +1,21 @@
+// src/components/ThreadAnalyzer.tsx
 import { useState, useEffect } from "react";
 import { useAppStore } from "../store/appStore";
-import { parseThreadContent, ParsedThread } from "../utils/threadParser";
+import { parseThreadContent } from "../utils/threadParser";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Clipboard, Search, MessageSquare } from "lucide-react"; // アイコン（オプション）
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function ThreadAnalyzer() {
   // ローカル状態
@@ -14,6 +29,7 @@ export function ThreadAnalyzer() {
   const toggleClipboardMonitoring = useAppStore(
     (state) => state.toggleClipboardMonitoring
   );
+  const threadContext = useAppStore((state) => state.threadContext);
 
   // スレッドテキストが変更されたら入力欄に反映
   useEffect(() => {
@@ -29,18 +45,27 @@ export function ThreadAnalyzer() {
       try {
         const clipboardText = await window.api.getClipboardText();
         setInputText(clipboardText);
-        handleAnalyzeThread(clipboardText);
       } catch (error) {
         console.error("クリップボードからのテキスト取得に失敗しました:", error);
       }
     }
   };
 
+  // 入力テキストの変更を処理
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+  };
+
   // スレッドを解析
   const handleAnalyzeThread = (text: string) => {
+    if (!text.trim()) {
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
+      // スレッド解析関数を呼び出す
       const parsedThread = parseThreadContent(text);
       setThreadContext(parsedThread);
     } catch (error) {
@@ -50,100 +75,115 @@ export function ThreadAnalyzer() {
     }
   };
 
-  // 入力テキストの変更を処理
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
-  };
-
-  // 解析ボタンのクリックを処理
-  const handleAnalyzeClick = () => {
-    handleAnalyzeThread(inputText);
-  };
-
-  // クリップボード監視の切り替え
-  const handleToggleMonitoring = () => {
-    toggleClipboardMonitoring(!clipboardMonitoring);
-  };
-
   return (
-    <div className="thread-analyzer">
-      <h2>スレッド取得</h2>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>スレッド取得</CardTitle>
+          <CardDescription>Slackのスレッドを解析します</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              onClick={handlePasteFromClipboard}
+              className="flex gap-2 items-center"
+            >
+              <Clipboard className="h-4 w-4" />
+              クリップボードから貼り付け
+            </Button>
 
-      <div className="controls">
-        <button className="paste-button" onClick={handlePasteFromClipboard}>
-          クリップボードから貼り付け
-        </button>
-
-        <div className="monitoring-toggle">
-          <input
-            type="checkbox"
-            id="monitoring-toggle"
-            checked={clipboardMonitoring}
-            onChange={handleToggleMonitoring}
-          />
-          <label htmlFor="monitoring-toggle">
-            クリップボード監視 {clipboardMonitoring ? "オン" : "オフ"}
-          </label>
-        </div>
-      </div>
-
-      <div className="thread-input-container">
-        <textarea
-          className="thread-input"
-          value={inputText}
-          onChange={handleInputChange}
-          placeholder="Slackからコピーしたスレッドをここに貼り付けてください..."
-          rows={10}
-        />
-      </div>
-
-      <div className="thread-actions">
-        <button
-          className="analyze-button"
-          onClick={handleAnalyzeClick}
-          disabled={!inputText || isProcessing}
-        >
-          {isProcessing ? "解析中..." : "スレッドを解析"}
-        </button>
-      </div>
-
-      <ThreadPreview />
-    </div>
-  );
-}
-
-// スレッドプレビューサブコンポーネント
-function ThreadPreview() {
-  const threadContext = useAppStore((state) => state.threadContext);
-
-  if (
-    !threadContext ||
-    !threadContext.messages ||
-    threadContext.messages.length === 0
-  ) {
-    return null;
-  }
-
-  return (
-    <div className="thread-preview">
-      <h3>スレッド内容</h3>
-      {threadContext.channelName && (
-        <div className="channel-name">
-          チャンネル: #{threadContext.channelName}
-        </div>
-      )}
-
-      <div className="thread-messages">
-        {threadContext.messages.map((message, index) => (
-          <div key={index} className="thread-message">
-            <div className="message-header">
-              <span className="sender">{message.sender}</span>
-              <span className="timestamp">[{message.timestamp}]</span>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="clipboard-monitoring-toggle"
+                checked={clipboardMonitoring}
+                onCheckedChange={toggleClipboardMonitoring}
+              />
+              <Label htmlFor="clipboard-monitoring-toggle">
+                クリップボード監視 {clipboardMonitoring ? "オン" : "オフ"}
+              </Label>
             </div>
-            <div className="message-content">{message.content}</div>
           </div>
-        ))}
-      </div>
+
+          <Textarea
+            value={inputText}
+            onChange={handleInputChange}
+            placeholder="Slackからコピーしたスレッドをここに貼り付けてください..."
+            className="min-h-[200px]"
+          />
+
+          <div className="flex justify-center">
+            <Button
+              onClick={() => handleAnalyzeThread(inputText)}
+              disabled={!inputText || isProcessing}
+              className="flex gap-2 items-center"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                  解析中...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  スレッドを解析
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {threadContext &&
+        threadContext.messages &&
+        threadContext.messages.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>解析結果</CardTitle>
+                {threadContext.channelName && (
+                  <div className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
+                    #{threadContext.channelName}
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {threadContext.messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-3 p-3 rounded-lg bg-muted/40"
+                  >
+                    <Avatar>
+                      <AvatarFallback>
+                        {message.sender.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{message.sender}</span>
+                        <span className="text-xs text-muted-foreground">
+                          [{message.timestamp}]
+                        </span>
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2">
+              <Button variant="outline" className="flex gap-1 items-center">
+                <MessageSquare className="h-4 w-4" />
+                返答を作成
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
     </div>
   );
 }

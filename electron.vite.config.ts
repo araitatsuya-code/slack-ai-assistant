@@ -12,6 +12,11 @@ export default defineConfig({
         },
       },
     },
+    resolve: {
+      alias: {
+        "@": resolve("src"),
+      },
+    },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
@@ -22,15 +27,14 @@ export default defineConfig({
         },
       },
     },
-  },
-  renderer: {
     resolve: {
       alias: {
         "@": resolve("src"),
       },
     },
-    plugins: [react()],
-    root: ".",
+  },
+  renderer: {
+    root: resolve(__dirname, "."),
     build: {
       rollupOptions: {
         input: {
@@ -38,5 +42,11 @@ export default defineConfig({
         },
       },
     },
+    resolve: {
+      alias: {
+        "@": resolve("src"),
+      },
+    },
+    plugins: [react()],
   },
 });

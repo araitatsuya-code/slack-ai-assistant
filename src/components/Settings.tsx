@@ -1,8 +1,28 @@
+// src/components/Settings.tsx
 import { useState, useEffect } from "react";
 import { useAppStore } from "../store/appStore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { Save } from "lucide-react"; // アイコン（オプション）
 
 export function Settings() {
-  // ローカル状態
   const [apiKey, setApiKey] = useState("");
   const [hotkeyValue, setHotkeyValue] = useState("");
 
@@ -16,7 +36,7 @@ export function Settings() {
 
   // 設定を読み込み
   useEffect(() => {
-    if (window.api) {
+    if (window.api && window.api.getStoreValue) {
       // API Keyの読み込み
       window.api.getStoreValue("apiKey").then((value) => {
         if (value) setApiKey(value);
@@ -31,79 +51,113 @@ export function Settings() {
 
   // API Keyの保存
   const handleSaveApiKey = async () => {
-    if (window.api) {
-      await window.api.setStoreValue("apiKey", apiKey);
-      alert("API Keyを保存しました");
+    if (window.api && window.api.setStoreValue) {
+      try {
+        await window.api.setStoreValue("apiKey", apiKey);
+        toast.success("API Keyを保存しました", {
+          description: "保存完了",
+        });
+      } catch (error) {
+        toast.error("API Keyの保存に失敗しました", {
+          description: "エラー",
+        });
+      }
     }
   };
 
   // ホットキーの保存
   const handleSaveHotkey = async () => {
-    if (window.api) {
-      await window.api.setStoreValue("hotkey", hotkeyValue);
-      alert("ホットキーを保存しました。次回起動時に有効になります。");
+    if (window.api && window.api.setStoreValue) {
+      try {
+        await window.api.setStoreValue("hotkey", hotkeyValue);
+        toast.success("ショートカットキーを保存しました", {
+          description: "次回起動時に有効になります。",
+        });
+      } catch (error) {
+        toast.error("ショートカットキーの保存に失敗しました", {
+          description: "エラー",
+        });
+      }
     }
   };
 
   return (
-    <div className="settings">
-      <h2>設定</h2>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>AI設定</CardTitle>
+          <CardDescription>AIサービスの設定を管理します</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="ai-model">AIモデル</Label>
+            <Select value={aiModel} onValueChange={setAiModel}>
+              <SelectTrigger id="ai-model">
+                <SelectValue placeholder="AIモデルを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gpt">OpenAI GPT</SelectItem>
+                <SelectItem value="claude">Anthropic Claude</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="settings-section">
-        <h3>AI設定</h3>
+          <div className="space-y-2">
+            <Label htmlFor="api-key">API Key</Label>
+            <div className="flex space-x-2">
+              <Input
+                id="api-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="API Keyを入力"
+              />
+              <Button onClick={handleSaveApiKey} variant="outline">
+                <Save className="h-4 w-4 mr-2" />
+                保存
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="form-group">
-          <label htmlFor="ai-model">AIモデル:</label>
-          <select
-            id="ai-model"
-            value={aiModel}
-            onChange={(e) => setAiModel(e.target.value)}
-          >
-            <option value="gpt">OpenAI GPT</option>
-            <option value="claude">Anthropic Claude</option>
-          </select>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>アプリ設定</CardTitle>
+          <CardDescription>アプリケーションの動作設定</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="clipboard-monitoring"
+              checked={clipboardMonitoring}
+              onCheckedChange={toggleClipboardMonitoring}
+            />
+            <Label htmlFor="clipboard-monitoring">
+              クリップボード監視を有効にする
+            </Label>
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="api-key">API Key:</label>
-          <input
-            type="password"
-            id="api-key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="API Key"
-          />
-          <button onClick={handleSaveApiKey}>保存</button>
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <h3>アプリ設定</h3>
-
-        <div className="form-group checkbox">
-          <input
-            type="checkbox"
-            id="clipboard-monitoring"
-            checked={clipboardMonitoring}
-            onChange={() => toggleClipboardMonitoring(!clipboardMonitoring)}
-          />
-          <label htmlFor="clipboard-monitoring">
-            クリップボード監視を有効にする
-          </label>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="hotkey">ショートカットキー:</label>
-          <input
-            type="text"
-            id="hotkey"
-            value={hotkeyValue}
-            onChange={(e) => setHotkeyValue(e.target.value)}
-            placeholder="例: CommandOrControl+Shift+A"
-          />
-          <button onClick={handleSaveHotkey}>保存</button>
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="hotkey">ショートカットキー</Label>
+            <div className="flex space-x-2">
+              <Input
+                id="hotkey"
+                value={hotkeyValue}
+                onChange={(e) => setHotkeyValue(e.target.value)}
+                placeholder="例: CommandOrControl+Shift+A"
+              />
+              <Button onClick={handleSaveHotkey} variant="outline">
+                <Save className="h-4 w-4 mr-2" />
+                保存
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              次回起動時に有効になります
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,59 +1,64 @@
+// src/store/appStore.ts
 import { create } from "zustand";
 
+// スレッドメッセージの型定義
 interface ThreadMessage {
   sender: string;
   content: string;
   timestamp: string;
 }
 
+// スレッドコンテキストの型定義
 interface ThreadContext {
   messages: ThreadMessage[];
-  channelName: string;
-  threadTopic: string;
+  channelName?: string;
 }
 
+// アプリケーション状態の型定義
 interface AppState {
+  // 状態
   threadText: string;
   threadContext: ThreadContext | null;
-  responseInput: string;
-  responseOptions: string[];
-  selectedResponse: number;
-  refineInput: string;
-  refineOutput: string;
-  aiModel: string;
   clipboardMonitoring: boolean;
 
   // アクション
   setThreadText: (text: string) => void;
   setThreadContext: (context: ThreadContext | null) => void;
-  setResponseInput: (text: string) => void;
-  setResponseOptions: (options: string[]) => void;
-  setSelectedResponse: (index: number) => void;
-  setRefineInput: (text: string) => void;
-  setRefineOutput: (text: string) => void;
+  toggleClipboardMonitoring: (enabled: boolean) => Promise<void>;
+
+  // 設定
+  aiModel: string;
   setAiModel: (model: string) => void;
-  toggleClipboardMonitoring: (enabled: boolean) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+// Zustandストアの作成
+export const useAppStore = create<AppState>((set, get) => ({
+  // 初期状態
   threadText: "",
   threadContext: null,
-  responseInput: "",
-  responseOptions: [],
-  selectedResponse: 0,
-  refineInput: "",
-  refineOutput: "",
-  aiModel: "gpt",
   clipboardMonitoring: false,
+  aiModel: "gpt",
 
-  setThreadText: (text) => set({ threadText: text }),
-  setThreadContext: (context) => set({ threadContext: context }),
-  setResponseInput: (text) => set({ responseInput: text }),
-  setResponseOptions: (options) =>
-    set({ responseOptions: options, selectedResponse: 0 }),
-  setSelectedResponse: (index) => set({ selectedResponse: index }),
-  setRefineInput: (text) => set({ refineInput: text }),
-  setRefineOutput: (text) => set({ refineOutput: text }),
-  setAiModel: (model) => set({ aiModel: model }),
-  toggleClipboardMonitoring: (enabled) => set({ clipboardMonitoring: enabled }),
+  // アクション
+  setThreadText: (text: string) => set({ threadText: text }),
+  setThreadContext: (context: ThreadContext | null) =>
+    set({ threadContext: context }),
+
+  toggleClipboardMonitoring: async (enabled: boolean) => {
+    if (window.api) {
+      try {
+        await window.api.setStoreValue("clipboardMonitoring", enabled);
+        if (enabled) {
+          await window.api.toggleClipboardMonitoring(true);
+        } else {
+          await window.api.toggleClipboardMonitoring(false);
+        }
+        set({ clipboardMonitoring: enabled });
+      } catch (error) {
+        console.error("クリップボード監視の切り替えに失敗しました:", error);
+      }
+    }
+  },
+
+  setAiModel: (model: string) => set({ aiModel: model }),
 }));
