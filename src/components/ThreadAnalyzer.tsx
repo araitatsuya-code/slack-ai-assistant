@@ -180,7 +180,7 @@ export function ThreadAnalyzer() {
               <Button
                 variant="outline"
                 className="flex gap-1 items-center"
-                onClick={() => (window.location.hash = "#response")}
+                onClick={() => (window.location.hash = "#response")} // ハッシュベースのナビゲーションを使用
               >
                 <MessageSquare className="h-4 w-4" />
                 返答を作成

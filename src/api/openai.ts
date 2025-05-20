@@ -59,9 +59,6 @@ export class OpenAIService implements AIService {
     }
   }
 
-  // OpenAI APIを呼び出す
-  // src/api/openai.ts の callOpenAI メソッドを修正
-
   private async callOpenAI(
     prompt: string,
     numResponses: number = 1

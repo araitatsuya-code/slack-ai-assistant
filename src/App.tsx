@@ -1,4 +1,3 @@
-// App.tsx
 import { useState, useEffect } from "react";
 import { ThreadAnalyzer } from "./components/ThreadAnalyzer";
 import { ResponseGenerator } from "./components/ResponseGenerator";
