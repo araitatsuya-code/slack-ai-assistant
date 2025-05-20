@@ -60,41 +60,76 @@ export class OpenAIService implements AIService {
   }
 
   // OpenAI APIを呼び出す
+  // src/api/openai.ts の callOpenAI メソッドを修正
+
   private async callOpenAI(
     prompt: string,
     numResponses: number = 1
   ): Promise<string[]> {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content:
-              "あなたは文章の推敲と適切な返答を生成する優秀なアシスタントです。",
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.apiKey}`,
           },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.7,
-        n: numResponses,
-        max_tokens: 1000,
-      }),
-    });
+          body: JSON.stringify({
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "あなたは文章の推敲と適切な返答を生成する優秀なアシスタントです。",
+              },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            n: numResponses,
+            max_tokens: 1000,
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error(`API呼び出しエラー: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        // エラーコードに基づいたわかりやすいメッセージ
+        if (response.status === 429) {
+          throw new Error(
+            "APIレート制限に達しました。しばらく待ってから再試行してください。"
+          );
+        } else if (response.status === 401) {
+          throw new Error("APIキーが無効です。設定を確認してください。");
+        } else if (response.status === 400) {
+          throw new Error(
+            `APIリクエストエラー: ${errorData.error?.message || "不明なエラー"}`
+          );
+        } else {
+          throw new Error(
+            `APIエラー (${response.status}): ${errorData.error?.message || "不明なエラー"}`
+          );
+        }
+      }
+
+      const data = await response.json();
+
+      // レスポンスから複数の回答を抽出
+      const choices = data.choices || [];
+      return choices.map((choice: any) => choice.message.content.trim());
+    } catch (error) {
+      console.error("OpenAI API呼び出しエラー:", error);
+
+      // エラーを再スローするが、よりユーザーにわかりやすいメッセージに変換
+      if (error instanceof Error) {
+        throw error; // 既にカスタムエラーメッセージが設定されている場合
+      } else {
+        throw new Error(
+          "API接続中にエラーが発生しました。ネットワーク接続を確認してください。"
+        );
+      }
     }
-
-    const data = await response.json();
-
-    // レスポンスから複数の回答を抽出
-    const choices = data.choices || [];
-    return choices.map((choice: any) => choice.message.content.trim());
   }
 
   // 推敲用のプロンプトを作成

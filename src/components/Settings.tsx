@@ -81,6 +81,43 @@ export function Settings() {
     }
   };
 
+  // APIキーを検証するボタンと関数を追加
+  const validateApiKey = async () => {
+    if (!apiKey) {
+      // APIキーが入力されていない場合
+      toast({
+        title: "エラー",
+        description: "APIキーを入力してください",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // 簡単なテストリクエストを送信
+      const aiService = createAIService(aiModel, apiKey);
+      await aiService.refineText("これはテストです。", {
+        style: "formal",
+        strength: "light",
+      });
+
+      toast({
+        title: "成功",
+        description: "APIキーは有効です",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description:
+          error instanceof Error
+            ? error.message
+            : "APIキーの検証に失敗しました",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -112,6 +149,9 @@ export function Settings() {
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="API Keyを入力"
               />
+              <Button onClick={validateApiKey} variant="secondary">
+                検証
+              </Button>
               <Button onClick={handleSaveApiKey} variant="outline">
                 <Save className="h-4 w-4 mr-2" />
                 保存
