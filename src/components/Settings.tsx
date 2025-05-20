@@ -20,7 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save } from "lucide-react"; // アイコン（オプション）
+import { Save } from "lucide-react";
+import { createAIService } from "../api";
 
 export function Settings() {
   const [apiKey, setApiKey] = useState("");

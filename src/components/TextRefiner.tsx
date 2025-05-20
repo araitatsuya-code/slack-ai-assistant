@@ -30,6 +30,9 @@ export function TextRefiner() {
     focus: ["grammar", "spelling", "tone", "clarity"],
   });
 
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   // グローバル状態
   const isProcessingAI = useAppStore((state) => state.isProcessingAI);
   const refinedTexts = useAppStore((state) => state.refinedTexts);
@@ -51,8 +54,19 @@ export function TextRefiner() {
   // テキスト推敲の実行
   const handleRefine = async () => {
     if (!inputText.trim()) return;
-    await refineText(inputText, options);
-    setSelectedOption(0); // 最初のオプションを選択
+
+    setIsError(false);
+    setErrorMessage("");
+
+    try {
+      await refineText(inputText, options);
+      setSelectedOption(0);
+    } catch (error) {
+      setIsError(true);
+      setErrorMessage(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
+    }
   };
 
   // 推敲結果をクリップボードにコピー
@@ -74,6 +88,16 @@ export function TextRefiner() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isError && (
+            <div className="mt-4 p-3 border border-red-300 bg-red-50 text-red-800 rounded-md">
+              <p className="font-medium">エラーが発生しました</p>
+              <p className="text-sm">{errorMessage}</p>
+              <p className="text-sm mt-1">
+                OpenAI
+                APIのレート制限に達した可能性があります。しばらく待ってから再試行してください。
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="refine-text">推敲するテキスト</Label>
             <Textarea
