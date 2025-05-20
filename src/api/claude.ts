@@ -23,9 +23,16 @@ export class ClaudeService implements AIService {
         "tone",
         "clarity",
       ];
+      const numResponses = options?.numResponses || 1;
 
-      const prompt = this.createRefinePrompt(text, style, strength, focus);
-      const responses = await this.callClaude(prompt);
+      const prompt = this.createRefinePrompt(
+        text,
+        style,
+        strength,
+        focus,
+        numResponses
+      );
+      const responses = await this.callClaude(prompt, numResponses);
 
       return responses;
     } catch (error) {
@@ -121,40 +128,41 @@ export class ClaudeService implements AIService {
     text: string,
     style: string,
     strength: string,
-    focus: string[]
+    focus: string[],
+    numResponses: number = 2 // numResponsesパラメータを追加
   ): string {
     return `
-以下のテキストを推敲してください。
-元のテキスト: "${text}"
-
-スタイル: ${style}
-推敲の強度: ${strength}
-重点的にチェックする項目: ${focus.join(", ")}
-
-以下の点に注意して推敲してください:
-1. 誤字脱字や文法的な誤りを修正
-2. より明確でわかりやすい表現への改善
-3. 適切な敬語や表現レベルの調整
-4. 文脈に合わせた適切な表現の選択
-
-${numResponses}種類の異なる推敲案を提案してください。それぞれの提案は以下の形式で表示してください:
-
-応答案1: [推敲されたテキスト]
-(改善ポイント: 簡単な説明)
-
-応答案2: [推敲されたテキスト]
-(改善ポイント: 簡単な説明)
-
-... 以下同様
-`;
+  以下のテキストを推敲してください。
+  元のテキスト: "${text}"
+  
+  スタイル: ${style}
+  推敲の強度: ${strength}
+  重点的にチェックする項目: ${focus.join(", ")}
+  
+  以下の点に注意して推敲してください:
+  1. 誤字脱字や文法的な誤りを修正
+  2. より明確でわかりやすい表現への改善
+  3. 適切な敬語や表現レベルの調整
+  4. 文脈に合わせた適切な表現の選択
+  
+  ${numResponses}種類の異なる推敲案を提案してください。それぞれの提案は以下の形式で表示してください:
+  
+  応答案1: [推敲されたテキスト]
+  (改善ポイント: 簡単な説明)
+  
+  応答案2: [推敲されたテキスト]
+  (改善ポイント: 簡単な説明)
+  
+  ... 以下同様
+  `;
   }
 
   // 返答生成用のプロンプトを作成
   private createResponsePrompt(
     threadContext: ThreadContext,
     responseHint?: string,
-    style?: string,
-    numResponses?: number
+    style: string = "formal",
+    numResponses: number = 2
   ): string {
     // スレッドの内容をテキストに変換
     const threadText = threadContext.messages
@@ -162,31 +170,31 @@ ${numResponses}種類の異なる推敲案を提案してください。それ�
       .join("\n\n");
 
     return `
-以下のSlackスレッドに対する返答を${numResponses}種類生成してください。
-
-チャンネル: ${threadContext.channelName || "不明"}
-
-スレッド内容:
-${threadText}
-
-${responseHint ? `返答のヒント: ${responseHint}` : ""}
-スタイル: ${style}
-
-以下の点に注意して返答を生成してください:
-1. スレッドの文脈を理解し、関連性の高い返答を作成
-2. 指定されたスタイル（${style}）に合わせた表現を使用
-3. 相手に不快感を与えない、丁寧な表現を心がける
-4. 具体的で建設的な内容を含める
-
-それぞれの返答案は以下の形式で表示してください:
-
-応答案1: [返答内容]
-(意図: 簡単な説明)
-
-応答案2: [返答内容]
-(意図: 簡単な説明)
-
-... 以下同様
-`;
+  以下のSlackスレッドに対する返答を${numResponses}種類生成してください。
+  
+  チャンネル: ${threadContext.channelName || "不明"}
+  
+  スレッド内容:
+  ${threadText}
+  
+  ${responseHint ? `返答のヒント: ${responseHint}` : ""}
+  スタイル: ${style}
+  
+  以下の点に注意して返答を生成してください:
+  1. スレッドの文脈を理解し、関連性の高い返答を作成
+  2. 指定されたスタイル（${style}）に合わせた表現を使用
+  3. 相手に不快感を与えない、丁寧な表現を心がける
+  4. 具体的で建設的な内容を含める
+  
+  それぞれの返答案は以下の形式で表示してください:
+  
+  応答案1: [返答内容]
+  (意図: 簡単な説明)
+  
+  応答案2: [返答内容]
+  (意図: 簡単な説明)
+  
+  ... 以下同様
+  `;
   }
 }

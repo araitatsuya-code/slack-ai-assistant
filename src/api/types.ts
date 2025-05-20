@@ -15,6 +15,7 @@ export interface RefineOptions {
   style?: "formal" | "casual" | "business";
   strength?: "light" | "medium" | "strong";
   focus?: ("grammar" | "spelling" | "tone" | "clarity")[];
+  numResponses?: number;
 }
 
 // 返答生成オプション

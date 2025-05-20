@@ -1,12 +1,13 @@
 // App.tsx
 import { useState, useEffect } from "react";
 import { ThreadAnalyzer } from "./components/ThreadAnalyzer";
+import { ResponseGenerator } from "./components/ResponseGenerator";
+import { TextRefiner } from "./components/TextRefiner";
 import { Settings } from "./components/Settings";
 import { useAppStore } from "./store/appStore";
-import { Toaster } from "sonner";
 import "./App.css";
 
-type TabType = "thread" | "settings";
+type TabType = "thread" | "response" | "refine" | "settings";
 
 function App(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabType>("thread");
@@ -52,6 +53,26 @@ function App(): JSX.Element {
             </button>
             <button
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "response"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("response")}
+            >
+              返答作成
+            </button>
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "refine"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("refine")}
+            >
+              テキスト推敲
+            </button>
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "settings"
                   ? "border-primary text-primary"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -66,6 +87,8 @@ function App(): JSX.Element {
 
       <main className="flex-1">
         {activeTab === "thread" && <ThreadAnalyzer />}
+        {activeTab === "response" && <ResponseGenerator />}
+        {activeTab === "refine" && <TextRefiner />}
         {activeTab === "settings" && <Settings />}
       </main>
 
@@ -73,8 +96,6 @@ function App(): JSX.Element {
         <p>Slack AI アシスタント v0.1.0</p>
         <p>© 2025</p>
       </footer>
-
-      <Toaster />
     </div>
   );
 }
