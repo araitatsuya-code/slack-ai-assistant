@@ -177,7 +177,11 @@ export function ThreadAnalyzer() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline" className="flex gap-1 items-center">
+              <Button
+                variant="outline"
+                className="flex gap-1 items-center"
+                onClick={() => (window.location.hash = "#response")}
+              >
                 <MessageSquare className="h-4 w-4" />
                 返答を作成
               </Button>
